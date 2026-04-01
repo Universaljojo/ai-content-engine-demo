@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sunrise.AI — 模板广场</title>
+<style>
+:root {
+  --accent: #374151;
+  --gold: #d97706;
+  --gold-hover: #b45309;
+  --gold-bg: rgba(217,119,6,0.08);
+  --surface-card: rgba(255,255,255,0.65);
+  --surface-input: rgba(255,255,255,0.5);
+  --border: rgba(0,0,0,0.06);
+  --border-input: rgba(0,0,0,0.08);
+  --border-card: rgba(255,255,255,0.7);
+  --text: #1c1917;
+  --text2: #57534e;
+  --text3: #a8a29e;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-btn: 980px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  background: linear-gradient(135deg, #fafaf9 0%, #f0ede8 30%, #f2f0ec 60%, #fafaf9 100%);
+  color: var(--text); min-height: 100vh; display: flex; position: relative; overflow: hidden;
+}
+
+body::before {
+  content: ''; position: fixed; top: -20%; right: -10%; width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(217,119,6,0.04) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: ''; position: fixed; bottom: -15%; left: -5%; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(217,119,6,0.03) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px; background: var(--surface-card);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0;
+  position: relative; z-index: 1;
+}
+.logo-area { padding: 20px; display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #ea580c, #f59e0b, #fbbf24);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #fff;
+}
+.logo-text { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+.logo-text .dot { color: var(--gold); }
+
+nav { flex: 1; padding: 8px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 3px;
+  color: var(--text); background: transparent;
+  font-weight: 400; text-decoration: none; font-size: 15px;
+  transition: all .15s; cursor: pointer;
+}
+.nav-item:hover { background: rgba(0,0,0,0.03); }
+.nav-item.active {
+  background: var(--gold-bg);
+  color: var(--gold-hover);
+  font-weight: 500;
+}
+.nav-item .icon { width: 18px; text-align: center; }
+
+/* Main */
+.main {
+  flex: 1; padding: 32px 40px; overflow-y: auto;
+  position: relative; z-index: 1;
+}
+
+.header { margin-bottom: 28px; }
+.header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+.header p { font-size: 14px; color: var(--text3); }
+
+/* Tabs */
+.tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+.tab {
+  padding: 8px 18px; border-radius: var(--radius-btn);
+  font-size: 14px; font-weight: 500; color: var(--text2);
+  background: transparent; border: 1px solid var(--border);
+  cursor: pointer; transition: all .15s;
+}
+.tab:hover { background: rgba(0,0,0,0.02); }
+.tab.active {
+  background: var(--gold);
+  color: #fff;
+  border-color: var(--gold);
+}
+
+/* Template Grid */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.template-card {
+  background: var(--surface-card);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 20px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.template-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.template-icon {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, var(--gold), #fbbf24);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  margin-bottom: 14px;
+}
+
+.template-card h3 {
+  font-size: 17px; font-weight: 600;
+  margin-bottom: 6px;
+}
+.template-card p {
+  font-size: 13px; color: var(--text3);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.template-meta {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12px; color: var(--text3);
+}
+.template-meta .points {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.visible { display: flex; }
+
+.modal {
+  width: 90%; max-width: 900px;
+  max-height: 85vh;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h2 { font-size: 20px; font-weight: 600; }
+.modal-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.04);
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text2);
+  transition: all .15s;
+}
+.modal-close:hover { background: rgba(0,0,0,0.08); }
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px;
+}
+
+.modal-section { margin-bottom: 28px; }
+.modal-section:last-child { margin-bottom: 0; }
+.modal-section h3 {
+  font-size: 15px; font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text2);
+}
+
+/* Scene List */
+.scene-list {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.scene-item {
+  background: rgba(255,255,255,0.8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.scene-num {
+  width: 24px; height: 24px;
+  background: var(--gold);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+  flex-shrink: 0;
+}
+.scene-desc {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text2);
+}
+
+/* Form */
+.form-group { margin-bottom: 18px; }
+.form-label {
+  display: block;
+  font-size: 13px; font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+.form-input, .form-textarea {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  background: rgba(255,255,255,0.8);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text3); }
+.form-input:focus, .form-textarea:focus { border-color: var(--gold); }
+.form-textarea { resize: vertical; min-height: 80px; }
+
+.form-hint {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* Aspect Ratio */
+.aspect-ratio-group {
+  display: flex; gap: 12px;
+}
+.aspect-btn {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255,255,255,0.8);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .15s;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text2);
+}
+.aspect-btn:hover { background: rgba(0,0,0,0.02); }
+.aspect-btn.active {
+  background: var(--gold-bg);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Upload */
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s;
+}
+.upload-area:hover { border-color: var(--gold); background: rgba(217,119,6,0.02); }
+.upload-area .icon { font-size: 32px; margin-bottom: 8px; }
+.upload-area p { font-size: 13px; color: var(--text3); }
+
+.modal-footer {
+  padding: 20px 28px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.points-estimate {
+  font-size: 14px;
+  color: var(--text2);
+}
+.points-estimate .num {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.btn-primary {
+  padding: 11px 28px;
+  font-size: 15px; font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: linear-gradient(135deg, #ea580c 0%, #d97706 50%, #f59e0b 100%);
+  border: none;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 2px 12px rgba(217,119,6,0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(217,119,6,0.4);
+}
+.btn-primary:active { transform: translateY(0); }
+
+
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo-area">
+    <div class="logo-icon">✦</div>
+    <div class="logo-text">Sunrise<span class="dot">.</span>AI</div>
+  </div>
+  <nav>
+    <a class="nav-item active" href="#"><span class="icon">📋</span>模板广场</a>
+    <a class="nav-item" href="#"><span class="icon">✨</span>自由创作</a>
+    <a class="nav-item" href="#"><span class="icon">🔥</span>热点中心</a>
+    <a class="nav-item" href="#"><span class="icon">🕐</span>我的视频</a>
+    <a class="nav-item" href="#"><span class="icon">👤</span>品牌形象</a>
+    <a class="nav-item" href="#"><span class="icon">📊</span>数据看板</a>
+    <a class="nav-item" href="#"><span class="icon">⚙️</span>模板管理</a>
+  </nav>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="header">
+    <h1>模板广场</h1>
+    <p>选择模板，填写信息，快速生成品牌视频</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="filterTemplates('all')">全部模板</button>
+    <button class="tab" onclick="filterTemplates('greeting')">早晚问候</button>
+    <button class="tab" onclick="filterTemplates('festival')">节气节日</button>
+    <button class="tab" onclick="filterTemplates('product')">产品推广</button>
+  </div>
+
+  <!-- Template Grid -->
+  <div class="template-grid" id="templateGrid">
+    <!-- 早安问候 -->
+    <div class="template-card" data-category="greeting" onclick="openModal('morning')">
+      <div class="template-icon">☀️</div>
+      <h3>早安问候</h3>
+      <p>温暖的早晨问候，传递品牌关怀</p>
+      <div class="template-meta">
+        <span>2 个场景</span>
+        <span>·</span>
+        <span class="points">预计 15 点</span>
+      </div>
+    </div>
+
+    <!-- 晚安问候 -->
+    <div class="template-card" data-category="greeting" onclick="openModal('evening')">
+      <div class="template-icon">🌙</div>
+      <h3>晚安问候</h3>
+      <p>温馨的晚间祝福，陪伴用户入眠</p>
+      <div class="template-meta">
+        <span>2 个场景</span>
+        <span>·</span>
+        <span class="points">预计 15 点</span>
+      </div>
+    </div>
+
+    <!-- 节气祝福 -->
+    <div class="template-card" data-category="festival" onclick="openModal('solar')">
+      <div class="template-icon">🍂</div>
+      <h3>节气祝福</h3>
+      <p>24 节气问候，传递传统文化关怀</p>
+      <div class="template-meta">
+        <span>3 个场景</span>
+        <span>·</span>
+        <span class="points">预计 22 点</span>
+      </div>
+    </div>
+
+    <!-- 节日祝福 -->
+    <div class="template-card" data-category="festival" onclick="openModal('holiday')">
+      <div class="template-icon">🎉</div>
+      <h3>节日祝福</h3>
+      <p>重要节日问候，增强品牌存在感</p>
+      <div class="template-meta">
+        <span>3 个场景</span>
+        <span>·</span>
+        <span class="points">预计 22 点</span>
+      </div>
+    </div>
+
+    <!-- 产品推广 -->
+    <div class="template-card" data-category="product" onclick="openModal('product')">
+      <div class="template-icon">💼</div>
+      <h3>产品推广</h3>
+      <p>保险产品介绍，突出卖点和保障</p>
+      <div class="template-meta">
+        <span>4 个场景</span>
+        <span>·</span>
+        <span class="points">预计 30 点</span>
+      </div>
+    </div>
+
+    <!-- 理财推广 -->
+    <div class="template-card" data-category="product" onclick="openModal('finance')">
+      <div class="template-icon">📈</div>
+      <h3>理财推广</h3>
+      <p>理财产品介绍，强调收益和安全</p>
+      <div class="template-meta">
+        <span>4 个场景</span>
+        <span>·</span>
+        <span class="points">预计 30 点</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 id="modalTitle">早安问候</h2>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- 场景列表 -->
+      <div class="modal-section">
+        <h3>场景列表</h3>
+        <div class="scene-list" id="sceneList">
+          <div class="scene-item">
+            <div class="scene-num">1</div>
+            <div class="scene-desc">开场：日出画面 + 品牌 logo 水印</div>
+          </div>
+          <div class="scene-item">
+            <div class="scene-num">2</div>
+            <div class="scene-desc">问候：温暖文案 + 品牌 slogan</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 填写信息 -->
+      <div class="modal-section">
+        <h3>填写信息</h3>
+        <div class="form-group">
+          <label class="form-label">品牌名称</label>
+          <input class="form-input" type="text" placeholder="例如：平安保险" value="平安保险">
+        </div>
+        <div class="form-group">
+          <label class="form-label">品牌 Slogan</label>
+          <input class="form-input" type="text" placeholder="例如：平安守护，温暖相伴" value="平安守护，温暖相伴">
+        </div>
+        <div class="form-group">
+          <label class="form-label">品牌 Logo（水印）</label>
+          <div class="upload-area">
+            <div class="icon">📤</div>
+            <p>点击上传或拖拽文件到此处</p>
+          </div>
+          <div class="form-hint">建议尺寸 512×512，PNG 格式，透明背景</div>
+        </div>
+      </div>
+
+      <!-- 视频比例 -->
+      <div class="modal-section">
+        <h3>视频比例</h3>
+        <div class="aspect-ratio-group">
+          <button class="aspect-btn active" onclick="selectAspect(this, '9:16')">
+            <div style="margin-bottom: 4px;">📱</div>
+            <div>9:16 竖版</div>
+            <div style="font-size: 12px; color: var(--text3); margin-top: 2px;">适合抖音、快手</div>
+          </button>
+          <button class="aspect-btn" onclick="selectAspect(this, '16:9')">
+            <div style="margin-bottom: 4px;">🖥️</div>
+            <div>16:9 横版</div>
+            <div style="font-size: 12px; color: var(--text3); margin-top: 2px;">适合视频号、B站</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="points-estimate">
+        预计消耗 <span class="num">15</span> 点
+      </div>
+      <button class="btn-primary" onclick="generate()">生成视频</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+const TEMPLATES = {
+  morning: {
+    title: '早安问候',
+    scenes: [
+      '开场：日出画面 + 品牌 logo 水印',
+      '问候：温暖文案 + 品牌 slogan'
+    ],
+    points: 15
+  },
+  evening: {
+    title: '晚安问候',
+    scenes: [
+      '开场：夜空画面 + 品牌 logo 水印',
+      '问候：温馨文案 + 品牌 slogan'
+    ],
+    points: 15
+  },
+  solar: {
+    title: '节气祝福',
+    scenes: [
+      '开场：节气特色画面（如立春花开）',
+      '介绍：节气知识 + 养生提示',
+      '祝福：品牌问候 + slogan'
+    ],
+    points: 22
+  },
+  holiday: {
+    title: '节日祝福',
+    scenes: [
+      '开场：节日氛围画面（如春节灯笼）',
+      '介绍：节日习俗 + 文化内涵',
+      '祝福：品牌问候 + slogan'
+    ],
+    points: 22
+  },
+  product: {
+    title: '产品推广',
+    scenes: [
+      '钩子：痛点场景（如家庭风险）',
+      '产品：保障内容 + 核心卖点',
+      '案例：理赔故事 + 用户评价',
+      '行动：联系方式 + 品牌 logo'
+    ],
+    points: 30
+  },
+  finance: {
+    title: '理财推广',
+    scenes: [
+      '钩子：财富焦虑场景',
+      '产品：收益介绍 + 安全保障',
+      '对比：与其他产品优势',
+      '行动：购买入口 + 品牌 logo'
+    ],
+    points: 30
+  }
+};
+
+function filterTemplates(category) {
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const cards = document.querySelectorAll('.template-card');
+  cards.forEach(card => {
+    if (category === 'all' || card.dataset.category === category) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+function openModal(templateId) {
+  const template = TEMPLATES[templateId];
+  document.getElementById('modalTitle').textContent = template.title;
+
+  const sceneList = document.getElementById('sceneList');
+  sceneList.innerHTML = template.scenes.map((scene, i) => `
+    <div class="scene-item">
+      <div class="scene-num">${i + 1}</div>
+      <div class="scene-desc">${scene}</div>
+    </div>
+  `).join('');
+
+  document.querySelector('.points-estimate .num').textContent = template.points;
+
+  document.getElementById('modalOverlay').classList.add('visible');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('visible');
+}
+
+function closeModalOnOverlay(e) {
+  if (e.target === e.currentTarget) closeModal();
+}
+
+function selectAspect(btn, ratio) {
+  document.querySelectorAll('.aspect-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function generate() {
+  alert('生成功能演示：实际会调用后端 API 创建生成任务');
+  closeModal();
+}
+</script>
+</body>
+</html>

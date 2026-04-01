@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Content Engine — Sunrise.AI</title>
+<style>
+:root{--bg:#0a0a0a;--surface:rgba(255,255,255,0.04);--card:rgba(255,255,255,0.06);--card-border:rgba(255,255,255,0.08);--gold:#d97706;--gold-bg:rgba(217,119,6,0.12);--gold-border:rgba(217,119,6,0.25);--text:#f5f5f5;--text2:#a3a3a3;--text3:#737373;--radius:16px;--radius-sm:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+section{padding:100px 40px;max-width:1200px;margin:0 auto;position:relative}
+.fade-in{opacity:0;transform:translateY(30px);transition:opacity .6s,transform .6s}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+h1{font-size:clamp(32px,5vw,56px);font-weight:800;letter-spacing:-0.02em;line-height:1.1}
+h2{font-size:clamp(24px,3.5vw,40px);font-weight:700;letter-spacing:-0.01em;line-height:1.2}
+h3{font-size:20px;font-weight:600}
+.tag{display:inline-block;font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.subtitle{color:var(--text2);font-size:18px;margin-top:12px;max-width:700px}
+.gold-text{background:linear-gradient(135deg,#f59e0b,#d97706,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.glow{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(120px);opacity:.15;pointer-events:none}
+.glow-gold{background:radial-gradient(circle,#d97706,transparent 70%)}
+.glow-blue{background:radial-gradient(circle,#2563eb,transparent 70%)}
+.card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:28px;backdrop-filter:blur(20px)}
+.card-gold{border-color:var(--gold-border);background:rgba(217,119,6,0.06)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.case-row{display:flex;gap:40px;align-items:flex-start;margin-bottom:80px}
+.case-media{flex:0 0 480px;display:flex;flex-direction:column;gap:16px}
+.case-text{flex:1;min-width:0}
+.case-img-wrap{position:relative;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--card-border)}
+.case-img-wrap img{width:100%;display:block}
+.case-img-label{position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);color:#fff;font-size:13px;font-weight:600;padding:6px 12px;border-radius:20px}
+.video-placeholder{background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:var(--radius-sm);padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06)}
+.video-placeholder .play-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.video-placeholder .placeholder-text{color:var(--text3);font-size:14px}
+.stat-row{display:flex;gap:16px;margin:20px 0;flex-wrap:wrap}
+.stat{background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:var(--radius-sm);padding:12px 16px;text-align:center}
+.stat b{display:block;font-size:22px;color:var(--gold)}
+.stat span{font-size:12px;color:var(--text2)}
+.tab-group{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}
+.tab-btn{padding:10px 20px;border-radius:980px;border:1px solid var(--card-border);background:transparent;color:var(--text2);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.tab-btn.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.tab-iframe{width:100%;max-width:1100px;height:650px;border:1px solid var(--card-border);border-radius:var(--radius);margin:0 auto;display:block}
+.tab-desc{text-align:center;color:var(--text2);font-size:14px;margin-top:12px}
+.phone-section{display:flex;gap:60px;align-items:center}
+.phone-mock{width:375px;height:750px;background:#000;border-radius:40px;padding:10px;flex-shrink:0;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.phone-mock iframe{width:100%;height:100%;border:none;border-radius:32px}
+.phone-info{flex:1}
+.step-list{list-style:none;counter-reset:step}
+.step-list li{counter-increment:step;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:15px;color:var(--text2)}
+.step-list li::before{content:counter(step);display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--gold-bg);color:var(--gold);font-size:13px;font-weight:700;align-items:center;justify-content:center;margin-right:12px}
+.prompt-box{border-radius:var(--radius-sm);padding:20px;font-size:14px;line-height:1.7}
+.prompt-bad{background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2)}
+.prompt-good{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2)}
+.prompt-label{font-size:13px;font-weight:700;margin-bottom:8px}
+.prompt-label.bad{color:#ef4444}
+.prompt-label.good{color:#22c55e}
+.moat-stack{display:flex;flex-direction:column;gap:4px;max-width:600px;margin:30px auto}
+.moat-layer{padding:18px 24px;border-radius:var(--radius-sm);text-align:center;font-weight:600;font-size:15px}
+.price-card{display:flex;flex-direction:column;position:relative}
+.price-card .badge{position:absolute;top:-12px;right:20px;background:var(--gold);color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
+.price-card .price-tag{font-size:13px;color:var(--gold);font-weight:600;margin-bottom:8px}
+.price-card h3{margin-bottom:6px}
+.price-card .price-fit{font-size:13px;color:var(--text3);margin-bottom:16px}
+.price-card ul{list-style:none;flex:1}
+.price-card ul li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:14px;color:var(--text2)}
+.price-card ul li::before{content:"✓ ";color:var(--gold)}
+.price-card .price-bottom{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);font-size:13px;color:var(--text3)}
+.price-card .btn{display:block;text-align:center;padding:12px;border-radius:980px;font-size:15px;font-weight:600;margin-top:16px;text-decoration:none;cursor:pointer;border:1px solid var(--card-border);color:var(--text2);background:transparent;transition:all .2s;font-family:inherit}
+.price-card .btn:hover{background:var(--gold);color:#fff;border-color:var(--gold)}
+.price-card .btn-primary{background:var(--gold);color:#fff;border-color:var(--gold)}
+.scene-card{padding:16px;text-align:center}
+.scene-card .icon{font-size:28px;margin-bottom:8px}
+.scene-card .name{font-size:14px;font-weight:600;margin-bottom:4px}
+.scene-card .desc{font-size:12px;color:var(--text3)}
+.style-card{padding:20px}
+.style-card .style-emoji{font-size:24px;margin-bottom:8px}
+.style-card .style-name{font-size:15px;font-weight:600;margin-bottom:4px}
+.style-card .style-desc{font-size:13px;color:var(--text3);margin-bottom:10px}
+.style-card .style-quote{font-size:14px;color:var(--text2);font-style:italic}
+.tech-row{display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.04);flex-wrap:wrap}
+.tech-row .tech-icon{font-size:20px;flex-shrink:0}
+.tech-row .tech-label{font-size:14px;font-weight:600;min-width:120px;flex-shrink:0}
+.tech-row .tech-models{display:flex;gap:8px;flex-wrap:wrap}
+.tech-row .tech-models span{background:var(--card);border:1px solid var(--card-border);border-radius:6px;padding:4px 10px;font-size:13px;color:var(--text2)}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);margin:0 auto;max-width:800px}
+@media(max-width:900px){
+section{padding:60px 20px}
+.grid-2,.grid-3{grid-template-columns:1fr}
+.grid-4{grid-template-columns:1fr 1fr}
+.case-row{flex-direction:column}
+.case-media{flex:none;width:100%}
+.phone-section{flex-direction:column;align-items:center}
+.phone-mock{width:320px;height:640px}
+.tab-iframe{height:400px}
+}
+</style>
+</head>
+<body>
+
+<!-- 1. HERO -->
+<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center">
+<div class="glow glow-gold" style="top:-200px;left:-100px"></div>
+<div class="glow glow-blue" style="bottom:-200px;right:-100px"></div>
+<div class="fade-in">
+<div class="tag">AI Content Engine</div>
+<h1><span class="gold-text">AI 内容生产系统</span></h1>
+<p class="subtitle" style="margin:16px auto 0">让好内容更容易被探索</p>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 2. PAIN -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Great Content Is Expensive</div>
+<h2>好内容很贵</h2>
+<p class="subtitle" style="margin:16px auto">好内容一直是高成本产出<br>一个创意往往需要完整制作团队</p>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3. DOMAIN EXPERTISE -->
+<section>
+<div class="fade-in">
+<div class="tag">Domain Expertise</div>
+<h2>同一个热点，四层纵深</h2>
+<p class="subtitle">通用 AI 只能蹭流量，垂直 Agent 能把热点变成精准获客内容</p>
+</div>
+<div class="grid-2" style="margin-top:40px">
+<div class="card fade-in">
+<div style="font-size:13px;color:var(--text3);margin-bottom:12px">通用 AI</div>
+<div style="font-size:18px;font-weight:600;margin-bottom:12px">"手把手教你个税汇算清缴"</div>
+<div style="color:#ef4444;font-size:14px">→ 纯蹭流量，跟保险无关，无法转化</div>
+</div>
+<div class="card card-gold fade-in">
+<div style="font-size:13px;color:var(--gold);margin-bottom:12px">我们的垂直 Agent</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:10px;align-items:flex-start"><span style="background:var(--gold);color:#fff;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</span><div><div style="font-weight:600;font-size:14px">热点识别</div><div style="font-size:13px;color:var(--text2)">"汇算清缴"季节性热点，<b style="color:var(--gold)">保险可切入</b></div></div></div>
+<div style="display:flex;gap:10px;align-items:flex-start"><span style="background:var(--gold);color:#fff;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</span><div><div style="font-weight:600;font-size:14px">行业知识</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span style="background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--gold)">税优健康险</span><span style="background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--gold)">企业年金</span><span style="background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--gold)">个税递延养老险</span></div></div></div>
+<div style="display:flex;gap:10px;align-items:flex-start"><span style="background:var(--gold);color:#fff;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</span><div><div style="font-weight:600;font-size:14px">选题输出</div><div style="font-size:13px;color:var(--text2)"><b>"买对保险，每年多退 2400 块"</b> — 从退税切入保险需求</div></div></div>
+<div style="display:flex;gap:10px;align-items:flex-start"><span style="background:var(--gold);color:#fff;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">4</span><div><div style="font-weight:600;font-size:14px">合规校验</div><div style="font-size:13px;color:var(--text2)">✓ 不承诺具体退税金额 · ✓ 标注"以实际税务政策为准" · ✓ 产品信息附条款编号</div></div></div>
+</div>
+</div>
+</div>
+<div class="fade-in" style="margin-top:24px;text-align:center">
+<div class="card" style="display:inline-block;padding:12px 24px;font-size:14px;color:var(--text2)">🛡️ 垂直 Agent 内置：行业知识库 · 产品条款库 · 合规红线库 · 监管动态追踪</div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 4. THREE PLAYS -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Three Proven Plays</div>
+<h2>三种爆款打法</h2>
+</div>
+<div class="grid-3" style="margin-top:40px">
+<div class="card fade-in" style="text-align:center">
+<div style="font-size:36px;margin-bottom:12px">🔥</div>
+<h3>热点复刻</h3>
+<p style="font-size:14px;color:var(--text2);margin-top:8px">看到爆款格式 → 拆解结构 → AI 二创成行业版本</p>
+</div>
+<div class="card fade-in" style="text-align:center">
+<div style="font-size:36px;margin-bottom:12px">💬</div>
+<h3>蹭大佬观点</h3>
+<p style="font-size:14px;color:var(--text2);margin-top:8px">名人金句 + 行业解读 → AI 快速成片</p>
+</div>
+<div class="card fade-in" style="text-align:center">
+<div style="font-size:36px;margin-bottom:12px">🎬</div>
+<h3>场景叙事</h3>
+<p style="font-size:14px;color:var(--text2);margin-top:8px">热点话题 × 电影级 AI 画面 → 口播做不到的视觉表达</p>
+</div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 5. CASE 1 -->
+<section>
+<div class="fade-in">
+<div class="tag">Case Study 01</div>
+<h2>热点复刻 · 这个基金能买吗</h2>
+</div>
+<div class="case-row" style="margin-top:40px">
+<div class="case-media fade-in">
+<div class="case-img-wrap">
+<img src="screenshots/case1-基金能买吗.jpg" alt="原版爆款">
+<div class="case-img-label">原版爆款 · 9.6万赞</div>
+</div>
+<div class="video-placeholder" data-case="case-1">
+<div class="play-icon">▶</div>
+<div class="placeholder-text">我们的二创 · 案例视频即将上线</div>
+</div>
+</div>
+<div class="case-text fade-in">
+<p style="color:var(--text2);margin-bottom:16px">原版爆款：小红书"这个男孩能嫁吗"系列（华尔街闺蜜Bella）</p>
+<p style="margin-bottom:16px">我们的二创：<b>复刻爆款格式，内容换成基金分析</b></p>
+<div class="stat-row">
+<div class="stat"><b>9.6万</b><span>赞</span></div>
+<div class="stat"><b>2.5万</b><span>收藏</span></div>
+<div class="stat"><b>1138</b><span>评论</span></div>
+</div>
+<p style="color:var(--text2);font-size:14px;margin-top:16px">话题标签：#我和我的春节 #春节经济学 #理财小白 #搞钱女孩</p>
+<div class="card card-gold" style="margin-top:16px;padding:16px">
+<div style="font-size:14px;color:var(--gold);font-weight:600">⚡ 从发现爆款到出片：不到半天</div>
+<div style="font-size:13px;color:var(--text2);margin-top:4px">爆款结构已被市场验证，我们用 AI 帮你快速复制到你的行业</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 6. CASE 2 -->
+<section>
+<div class="fade-in">
+<div class="tag">Case Study 02</div>
+<h2>蹭大佬观点 · 段永平说买标普500</h2>
+</div>
+<div class="case-row" style="margin-top:40px">
+<div class="case-media fade-in">
+<div class="case-img-wrap">
+<img src="screenshots/case2-段永平标普500.jpg" alt="段永平标普500">
+<div class="case-img-label">1981赞 · 3486收藏</div>
+</div>
+<div class="video-placeholder" data-case="case-2">
+<div class="play-icon">▶</div>
+<div class="placeholder-text">我们的二创 · 案例视频即将上线</div>
+</div>
+</div>
+<div class="case-text fade-in">
+<p style="color:var(--text2);margin-bottom:16px">段永平说："如果你不懂投资，那就买标普500"</p>
+<p style="margin-bottom:16px"><b>名人观点自带流量和信任感</b>，AI 生成画面 + 专业解读，不是简单搬运</p>
+<div class="stat-row">
+<div class="stat"><b>1981</b><span>赞</span></div>
+<div class="stat"><b>3486</b><span>收藏</span></div>
+<div class="stat"><b>85</b><span>评论</span></div>
+</div>
+<div class="card card-gold" style="margin-top:16px;padding:16px">
+<div style="font-size:14px;color:var(--gold);font-weight:600">💡 大佬观点 × 行业解读 = 低成本高信任内容</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 7. CASE 3 -->
+<section>
+<div class="fade-in">
+<div class="tag">Case Study 03</div>
+<h2>场景叙事 · 滑雪背后的生意经</h2>
+</div>
+<div class="case-row" style="margin-top:40px">
+<div class="case-media fade-in">
+<div class="video-placeholder" data-case="case-3" style="padding:80px 20px">
+<div class="play-icon">▶</div>
+<div class="placeholder-text">AI 生成滑雪场景 · 案例视频即将上线</div>
+</div>
+</div>
+<div class="case-text fade-in">
+<p style="color:var(--text2);margin-bottom:16px">蹭冰雪经济热点，从滑雪聊到万亿产业，自然引导到消费指数基金</p>
+<div style="display:flex;flex-direction:column;gap:12px;margin:20px 0">
+<div class="card" style="padding:16px;display:flex;align-items:center;gap:12px"><span style="font-size:24px">📈</span><div><div style="font-weight:600;font-size:15px">产业规模</div><div style="font-size:13px;color:var(--text2)">2015年 2700亿 → 2024年 9800亿 → 2025年预计突破<b style="color:var(--gold)">万亿</b></div></div></div>
+<div class="card" style="padding:16px;display:flex;align-items:center;gap:12px"><span style="font-size:24px">🎬</span><div><div style="font-weight:600;font-size:15px">AI 电影级画面</div><div style="font-size:13px;color:var(--text2)">滑雪场景 + 数据可视化 + 专业配音，口播做不到，实拍成本太高</div></div></div>
+<div class="card" style="padding:16px;display:flex;align-items:center;gap:12px"><span style="font-size:24px">✅</span><div><div style="font-weight:600;font-size:15px">已过客户审批</div><div style="font-size:13px;color:var(--text2)">数据来源：国家体育总局、2025国际冬季运动博览会报告</div></div></div>
+</div>
+<div class="card card-gold" style="padding:16px">
+<div style="font-size:14px;color:var(--gold);font-weight:600">🎯 AI 让"高品质场景叙事"的成本降到传统拍摄的十分之一</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 8. CASE 4 -->
+<section>
+<div class="fade-in">
+<div class="tag">Case Study 04</div>
+<h2>保险做同款 · 养老金爆款二创</h2>
+</div>
+<div class="case-row" style="margin-top:40px">
+<div class="case-media fade-in">
+<div class="case-img-wrap">
+<img src="screenshots/case4-保险养老金搜索结果.jpg" alt="保险养老金搜索结果">
+<div class="case-img-label">话题热门 · 1.4万赞</div>
+</div>
+<div class="video-placeholder" data-case="case-4">
+<div class="play-icon">▶</div>
+<div class="placeholder-text">我们的二创 · 案例视频即将上线</div>
+</div>
+</div>
+<div class="case-text fade-in">
+<p style="font-size:20px;font-weight:600;margin-bottom:16px">"0岁存45岁退休！终身年领14万养老金！"</p>
+<p style="color:var(--text2);margin-bottom:16px">扒话题下的热门款，AI 快速二创成客户品牌版本</p>
+<div style="display:flex;flex-direction:column;gap:8px;margin:20px 0">
+<div style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text2)"><span style="color:var(--gold)">①</span> 找到话题下的爆款内容</div>
+<div style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text2)"><span style="color:var(--gold)">②</span> AI 拆解爆款结构和角度</div>
+<div style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text2)"><span style="color:var(--gold)">③</span> 换成客户产品信息，二创生成</div>
+<div style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text2)"><span style="color:var(--gold)">④</span> 合规校验 → 直接可发</div>
+</div>
+<div class="card card-gold" style="padding:16px">
+<div style="font-size:14px;color:var(--gold);font-weight:600">🚀 站在已验证的爆款上做二创，又快又准</div>
+</div>
+</div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 9. 11 SCENES -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Content Formats</div>
+<h2>不止口播，11 种场景覆盖</h2>
+<p class="subtitle" style="margin:12px auto">每种内容形式都有对应的 SOP 和专属 Prompt 体系</p>
+</div>
+<div class="grid-4" style="margin-top:40px">
+<div class="card scene-card fade-in"><div class="icon">🎤</div><div class="name">街头采访</div><div class="desc">路人视角，真实感建立信任</div></div>
+<div class="card scene-card fade-in"><div class="icon">🚗</div><div class="name">车内随拍</div><div class="desc">私密感强，像朋友在跟你聊</div></div>
+<div class="card scene-card fade-in"><div class="icon">📹</div><div class="name">车内 Vlog</div><div class="desc">通勤场景，自然不做作</div></div>
+<div class="card scene-card fade-in"><div class="icon">💰</div><div class="name">理财话题</div><div class="desc">场景化切入存钱和保障</div></div>
+<div class="card scene-card fade-in"><div class="icon">☕</div><div class="name">茶水间</div><div class="desc">办公室日常，同事视角种草</div></div>
+<div class="card scene-card fade-in"><div class="icon">🎙️</div><div class="name">脱口秀</div><div class="desc">人设鲜明，娱乐中传递知识</div></div>
+<div class="card scene-card fade-in"><div class="icon">🏢</div><div class="name">公司走廊</div><div class="desc">职场氛围，专业又亲和</div></div>
+<div class="card scene-card fade-in"><div class="icon">👔</div><div class="name">职场科普</div><div class="desc">男性顾问人设，专业沉稳</div></div>
+<div class="card scene-card fade-in"><div class="icon">🚇</div><div class="name">地铁通勤</div><div class="desc">碎片化场景，随时随地输出</div></div>
+<div class="card scene-card fade-in"><div class="icon">🧗</div><div class="name">户外攀岩</div><div class="desc">运动+保障，生活方式共鸣</div></div>
+<div class="card scene-card fade-in"><div class="icon">⛷️</div><div class="name">滑雪运动</div><div class="desc">高端生活场景，意外险切入</div></div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 10. 500 STYLES -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Personalization</div>
+<h2>500 个代理人，500 种风格</h2>
+<p class="subtitle" style="margin:12px auto">标准化人设体系 + AI 差异化生成 + 合规话术库</p>
+</div>
+<div class="fade-in" style="text-align:center;margin:24px 0 8px">
+<div class="card" style="display:inline-block;padding:10px 20px;font-size:14px">📝 同一个选题：<b>年轻人为什么需要重疾险</b></div>
+</div>
+<div class="grid-2" style="margin-top:16px">
+<div class="card style-card fade-in"><div class="style-emoji">🎯</div><div class="style-name">严谨专业型</div><div class="style-desc">用数据说话的分析师</div><div class="style-quote">根据最新数据，35岁以下重疾出险占比已超15%。25岁买重疾险的保费只有35岁的一半——</div></div>
+<div class="card style-card fade-in"><div class="style-emoji">☕</div><div class="style-name">亲和大姐型</div><div class="style-desc">像邻居姐姐跟你聊天</div><div class="style-quote">我跟你说个真事儿，上个月我一个同事，才28岁，体检查出甲状腺结节，结果被两家保险公司拒保了——</div></div>
+<div class="card style-card fade-in"><div class="style-emoji">😄</div><div class="style-name">年轻活泼型</div><div class="style-desc">用段子和比喻讲保险</div><div class="style-quote">重疾险就像你手机的碎屏险。买的时候觉得多余，手机摔地上的那一秒你就悟了——</div></div>
+<div class="card style-card fade-in"><div class="style-emoji">🤔</div><div class="style-name">沉稳顾问型</div><div class="style-desc">沉思后给一个走心建议</div><div class="style-quote">如果明天你突然不能工作了，你的房贷、车贷、家庭开支，能撑多久？重疾险本质上不是医疗费——</div></div>
+</div>
+<div class="fade-in" style="text-align:center;margin-top:20px">
+<div style="font-size:13px;color:var(--text3)">每个版本自动过合规审核 · 不出现违规承诺 · 不使用绝对化用语 · 不贬低竞品</div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 11. SUNRISE PLATFORM -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Platform</div>
+<h2>Sunrise.AI 内容创作平台</h2>
+<p class="subtitle" style="margin:12px auto">面向企业营销部门 · PC 端</p>
+</div>
+<div class="tab-group fade-in" style="margin-top:30px">
+<button class="tab-btn active" onclick="switchTab(this,'prototypes/ux-05-hotspot.html','实时热点 · 智能分析行业相关度 · AI 给出二创方向 · 一键生成脚本')">🔥 热点中心</button>
+<button class="tab-btn" onclick="switchTab(this,'prototypes/ux-03-templates.html','早安问候 / 节气祝福 / 产品推广 — 选模板 → 填品牌信息 → 一键生成')">📋 模板广场</button>
+<button class="tab-btn" onclick="switchTab(this,'prototypes/ux-02-quick.html','多模型可选 · 图片 / 视频 / 音频全覆盖')">✨ 自由创作</button>
+</div>
+<iframe id="platformFrame" class="tab-iframe fade-in" src="prototypes/ux-05-hotspot.html" sandbox="allow-scripts allow-same-origin"></iframe>
+<div id="platformDesc" class="tab-desc fade-in">实时热点 · 智能分析行业相关度 · AI 给出二创方向 · 一键生成脚本</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 12. STARRY PLATFORM -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">KOS Platform</div>
+<h2>Starry.AI 做同款平台</h2>
+<p class="subtitle" style="margin:12px auto">面向 KOS / 保险代理人 · 移动端</p>
+</div>
+<div class="phone-section" style="margin-top:40px">
+<div class="phone-mock fade-in">
+<iframe src="prototypes/kos-mobile-ui.html" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+<div class="phone-info fade-in">
+<h3 style="margin-bottom:20px">每个代理人都有自己的 AI 营销助手</h3>
+<ol class="step-list">
+<li>选模板 — 按客户场景分类（少儿保障 / 家庭顶梁柱 / 养老规划 / 财富传承）</li>
+<li>上传照片 + 声音 — 每个人生成不同的内容</li>
+<li>同城改写 — 自动适配本地化表达</li>
+<li>一键生成 — AI 生成视频，约1-3分钟</li>
+<li>发布包 — 自动生成封面 + 3条标题 + 文案 + 话题标签</li>
+<li>直达小红书 — 一键复制文案，跳转发布</li>
+</ol>
+<div class="grid-2" style="margin-top:24px;gap:12px">
+<div class="card" style="padding:14px;text-align:center;font-size:13px"><span style="font-size:20px">🏢</span><br>绑定保险公司</div>
+<div class="card" style="padding:14px;text-align:center;font-size:13px"><span style="font-size:20px">📋</span><br>场景分类模板</div>
+<div class="card" style="padding:14px;text-align:center;font-size:13px"><span style="font-size:20px">🛡️</span><br>合规提醒内置</div>
+<div class="card" style="padding:14px;text-align:center;font-size:13px"><span style="font-size:20px">👥</span><br>500人500种风格</div>
+</div>
+</div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 13. PROMPT ENGINEERING -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Prompt Engineering</div>
+<h2>同样的模型，不同的指令</h2>
+<p class="subtitle" style="margin:12px auto">差距不在工具，在于怎么跟 AI 对话</p>
+</div>
+<div class="grid-2" style="margin-top:40px">
+<div class="fade-in">
+<div class="prompt-box prompt-bad">
+<div class="prompt-label bad">✗ 普通人的 Prompt</div>
+<div style="font-size:16px;margin:12px 0">"帮我写一条关于重疾险的短视频脚本"</div>
+<div style="color:var(--text3);font-size:13px;margin-top:12px">通用模板感、无差异化、像教科书不像真人说话</div>
+</div>
+</div>
+<div class="fade-in">
+<div class="prompt-box prompt-good">
+<div class="prompt-label good">✓ 我们的 Prompt</div>
+<div style="font-size:13px;color:var(--text2);line-height:1.8;margin-top:8px">
+<b>角色：</b>28岁女性保险顾问，人设"职场闺蜜"<br>
+<b>受众：</b>25-35岁一线城市上班族，有房贷、刚组建家庭<br>
+<b>产品：</b>[品牌] 终身重疾险，多次赔付+轻症豁免<br>
+<b>结构：</b>痛点开头 → 知识点 → 场景算账 → 软性CTA<br>
+<b>合规：</b>不承诺收益、不用"最""一定"、不贬低竞品<br>
+<b>风格：</b>口语化、200字内、竖屏口播节奏
+</div>
+<div style="color:#22c55e;font-size:13px;margin-top:12px">精准人设、场景代入、合规可控、口播节奏适配</div>
+</div>
+</div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 14. CORE MOAT -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Core Moat</div>
+<h2>从工具到结果，四层专业壁垒</h2>
+</div>
+<div class="moat-stack fade-in">
+<div class="moat-layer" style="background:rgba(255,255,255,0.03)">AI 模型 <span style="color:var(--text3);font-weight:400;font-size:13px">— 人人可用</span></div>
+<div class="moat-layer" style="background:rgba(217,119,6,0.08)">Prompt 工程 <span style="color:var(--text3);font-weight:400;font-size:13px">— 数百项目沉淀</span></div>
+<div class="moat-layer" style="background:rgba(217,119,6,0.15)">SOP 体系 <span style="color:var(--text3);font-weight:400;font-size:13px">— 100+ 标准流程</span></div>
+<div class="moat-layer" style="background:rgba(217,119,6,0.25);color:var(--gold)">模型调度策略 <span style="font-weight:400;font-size:13px">— 核心壁垒</span></div>
+</div>
+<div class="fade-in" style="text-align:center;margin-top:16px;font-size:13px;color:var(--text3)">↑ 越往上越容易被复制 · 越往下越是我们的核心积累 ↑</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 15. WHY NOT JIANYING -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Why Us</div>
+<h2>为什么通用工具做不了</h2>
+</div>
+<div class="grid-2" style="margin-top:40px">
+<div class="card fade-in">
+<div style="font-size:13px;color:var(--text3);margin-bottom:12px">通用工具（剪映 / 即梦 / 稿定）</div>
+<ul style="list-style:none;display:flex;flex-direction:column;gap:12px">
+<li style="font-size:14px;color:var(--text2)">❌ 服务所有人，不做行业定制</li>
+<li style="font-size:14px;color:var(--text2)">❌ 不会为保险代理人做专属热点追踪</li>
+<li style="font-size:14px;color:var(--text2)">❌ 不会告诉你"这个热点怎么蹭来卖保险"</li>
+</ul>
+</div>
+<div class="card card-gold fade-in">
+<div style="font-size:13px;color:var(--gold);margin-bottom:12px">我们的垂直 Agent</div>
+<ul style="list-style:none;display:flex;flex-direction:column;gap:12px">
+<li style="font-size:14px;color:var(--text2)">✅ 垂直行业热点 × 二创策略</li>
+<li style="font-size:14px;color:var(--text2)">✅ 行业知识库 · 产品条款库 · 合规红线库</li>
+<li style="font-size:14px;color:var(--text2)">✅ 代运营实战积累的 know-how</li>
+</ul>
+</div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 16. TECH STACK -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Technology Stack</div>
+<h2>底层引擎 · 多模型协同</h2>
+<p class="subtitle" style="margin:12px auto">不是堆模型，是知道每个模型能力边界在哪</p>
+</div>
+<div class="fade-in" style="margin-top:40px">
+<div class="tech-row"><span class="tech-icon">🧠</span><span class="tech-label">内容大脑</span><div class="tech-models"><span>DeepSeek V3</span><span>Claude Opus 4.6</span><span>豆包 Doubao 2.0</span><span>Qwen 3.5</span></div></div>
+<div class="tech-row"><span class="tech-icon">🎨</span><span class="tech-label">视觉生成</span><div class="tech-models"><span>Midjourney V7</span><span>Seedream 4.5</span><span>Imagen 4</span></div></div>
+<div class="tech-row"><span class="tech-icon">🎬</span><span class="tech-label">视频生成</span><div class="tech-models"><span>Veo 3.1</span><span>Kling 3.0</span><span>Seedance 2.0</span><span>Runway Gen-4</span></div></div>
+<div class="tech-row"><span class="tech-icon">🔊</span><span class="tech-label">语音合成</span><div class="tech-models"><span>MiniMax Speech</span><span>声音克隆</span><span>Qwen3-TTS</span></div></div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 17. PRICING -->
+<section>
+<div class="fade-in" style="text-align:center">
+<div class="tag">Pricing</div>
+<h2>三种合作方式</h2>
+</div>
+<div class="grid-3" style="margin-top:40px">
+<div class="card price-card fade-in">
+<div class="price-tag">帮你做</div>
+<h3>AI 内容代运营</h3>
+<div class="price-fit">适合：有预算、没团队、要专业产出</div>
+<ul>
+<li>选题策划</li>
+<li>AI 内容生产</li>
+<li>合规审核</li>
+<li>发布运营</li>
+<li>全流程托管</li>
+</ul>
+<div class="price-bottom">按项目报价，详询</div>
+<button class="btn">联系我们</button>
+</div>
+<div class="card card-gold price-card fade-in">
+<div class="badge">推荐</div>
+<div class="price-tag">让你自己做</div>
+<h3>Sunrise.AI 平台</h3>
+<div class="price-fit">适合：有团队、要降本增效</div>
+<ul>
+<li>标准版 ¥14.8万/年（3账号 / 1万点）</li>
+<li>旗舰版 ¥24.8万/年（10账号 / 2万点）</li>
+<li>行业模板库</li>
+<li>品牌素材管理</li>
+<li>旗舰版含专属对接人</li>
+<li>含远程培训 1 次</li>
+</ul>
+<div class="price-bottom">额外账号 ¥5,000/账号/年<br>参考产能：标准版 ≈ 1万张图 或 120条30s视频</div>
+<button class="btn btn-primary">了解详情</button>
+</div>
+<div class="card price-card fade-in">
+<div class="price-tag">让 500 人都能做</div>
+<h3>Starry.AI 平台</h3>
+<div class="price-fit">适合：大量 KOS / 代理人 / 导购</div>
+<ul>
+<li>每个代理人一个 AI 营销助手</li>
+<li>一键做同款、一键发布</li>
+<li>模板按客户场景分类</li>
+<li>合规提醒内置</li>
+<li>发布包自动生成</li>
+</ul>
+<div class="price-bottom">点数充值：10点 ¥120 / 30点 ¥330 / 50点 ¥500<br>企业批量采购另议</div>
+<button class="btn">了解详情</button>
+</div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 18. FOOTER -->
+<section style="min-height:60vh;display:flex;align-items:center;justify-content:center;text-align:center">
+<div class="glow glow-gold" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+<div class="fade-in">
+<div class="tag">AI Content Engine</div>
+<h1><span class="gold-text">让品牌内容持续生长</span></h1>
+<p class="subtitle" style="margin:16px auto">一个系统，无限内容</p>
+</div>
+</section>
+
+<script>
+function switchTab(btn, src, desc) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('platformFrame').src = src;
+  document.getElementById('platformDesc').textContent = desc;
+}
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
